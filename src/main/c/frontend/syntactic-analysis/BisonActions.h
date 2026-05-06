@@ -32,8 +32,8 @@ Instruction * ColorSemanticAction(Color color);
 Instruction * BackgroundSemanticAction(Color color);
 Instruction * BorderSemanticAction(Color color);
 Instruction * NumbersSemanticAction(NumberType numberType);
-int TimezoneExprSemanticAction(int offset);
-Instruction * TimezoneSemanticAction(int fromOffset, int toOffset);
+TimezoneExpr * TimezoneExprSemanticAction(int offset);
+Instruction * TimezoneSemanticAction(TimezoneExpr * from, TimezoneExpr * to);
 Instruction * RepeatSemanticAction(int times, InstructionList * body);
 Instruction * IfSemanticAction(Condition * condition, InstructionList * thenBranch, InstructionList * elseBranch);
 

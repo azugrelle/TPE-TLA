@@ -12,6 +12,8 @@
 #include "../../support/type/TokenLabel.h"
 #include "../Frontend.h"
 
+#define IGNORED (-1)
+
 /** Initialize module's internal state. */
 ModuleDestructor initializeFlexActionsModule(LexicalAnalyzer * lexicalAnalyzer);
 

@@ -146,17 +146,21 @@ Instruction * NumbersSemanticAction(NumberType numberType) {
 	return instruction;
 }
 
-int TimezoneExprSemanticAction(int offset) {
+TimezoneExpr * TimezoneExprSemanticAction(int offset) {
 	_logSyntacticAnalyzerAction(__FUNCTION__);
-	return offset;
+	TimezoneExpr * expr = calloc(1, sizeof(TimezoneExpr));
+	expr->offset = offset;
+	return expr;
 }
 
-Instruction * TimezoneSemanticAction(int fromOffset, int toOffset) {
+Instruction * TimezoneSemanticAction(TimezoneExpr * from, TimezoneExpr * to) {
 	_logSyntacticAnalyzerAction(__FUNCTION__);
 	Instruction * instruction = calloc(1, sizeof(Instruction));
 	instruction->type = INSTR_TIMEZONE;
-	instruction->timezone.fromOffset = fromOffset;
-	instruction->timezone.toOffset = toOffset;
+	instruction->timezone.fromOffset = from->offset;
+	instruction->timezone.toOffset = to->offset;
+	free(from);
+	free(to);
 	return instruction;
 }
 
