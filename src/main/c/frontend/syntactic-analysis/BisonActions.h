@@ -10,17 +10,37 @@
 #include <stdlib.h>
 
 /** Initialize module's internal state. */
-ModuleDestructor initializeBisonActionsModule();
+ModuleDestructor initializeBisonActionsModule(CompilerState * compilerState);
 
-/**
- * Bison semantic actions.
- */
+/* Program */
+Program * ProgramSemanticAction(InstructionList * instructions);
 
-Constant * IntegerConstantSemanticAction(const int value);
-Expression * ArithmeticExpressionSemanticAction(Expression * leftExpression, Expression * rightExpression, ExpressionType type);
-Expression * FactorExpressionSemanticAction(Factor * factor);
-Factor * ConstantFactorSemanticAction(Constant * constant);
-Factor * ExpressionFactorSemanticAction(Expression * expression);
-Program * ExpressionProgramSemanticAction(Expression * expression);
+/* Instruction list */
+InstructionList * InstructionListSemanticAction(Instruction * instruction, InstructionList * next);
+InstructionList * EmptyInstructionListSemanticAction(void);
+
+/* Instructions */
+Instruction * ClockSemanticAction(int hour, int minute);
+Instruction * RenderSemanticAction(void);
+Instruction * AddSemanticAction(int value, TimeUnit unit);
+Instruction * SubSemanticAction(int value, TimeUnit unit);
+Instruction * SetHourSemanticAction(int value);
+Instruction * SetMinuteSemanticAction(int value);
+Instruction * RoundSemanticAction(void);
+Instruction * NextHourSemanticAction(void);
+Instruction * ColorSemanticAction(Color color);
+Instruction * BackgroundSemanticAction(Color color);
+Instruction * BorderSemanticAction(Color color);
+Instruction * NumbersSemanticAction(NumberType numberType);
+int TimezoneExprSemanticAction(int offset);
+Instruction * TimezoneSemanticAction(int fromOffset, int toOffset);
+Instruction * RepeatSemanticAction(int times, InstructionList * body);
+Instruction * IfSemanticAction(Condition * condition, InstructionList * thenBranch, InstructionList * elseBranch);
+
+/* Conditions */
+Condition * SimpleConditionSemanticAction(Component component, Comparator comparator, int value);
+Condition * AndConditionSemanticAction(Condition * left, Condition * right);
+Condition * OrConditionSemanticAction(Condition * left, Condition * right);
+Condition * NotConditionSemanticAction(Condition * operand);
 
 #endif
