@@ -13,6 +13,18 @@
 #include "../Frontend.h"
 
 /** Initialize module's internal state. */
-ModuleDestructor initializeFlexActionsModule();
+ModuleDestructor initializeFlexActionsModule(LexicalAnalyzer * lexicalAnalyzer);
+
+CompilationStatus KeywordLexemeAction(TokenLabel label);
+CompilationStatus OperatorLexemeAction(TokenLabel label);
+CompilationStatus SymbolLexemeAction(TokenLabel label);
+CompilationStatus IntegerLexemeAction();
+CompilationStatus EnterLineCommentLexemeAction(FlexContext context);
+CompilationStatus LeaveLineCommentLexemeAction();
+CompilationStatus EnterMultilineCommentLexemeAction(FlexContext context);
+CompilationStatus LeaveMultilineCommentLexemeAction();
+CompilationStatus IgnoredLexemeAction();
+CompilationStatus UnknownLexemeAction();
+CompilationStatus EOFLexemeAction();
 
 #endif
