@@ -1,0 +1,6 @@
+clock 10:00
+repeat 2 {
+  if (hour == 10) {
+    add 1 hours
+}
+render

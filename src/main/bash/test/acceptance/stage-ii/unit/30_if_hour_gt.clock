@@ -1,0 +1,5 @@
+clock 15:00
+if (hour > 12) {
+  set hour 0
+}
+render

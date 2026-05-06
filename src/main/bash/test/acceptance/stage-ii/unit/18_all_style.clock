@@ -1,0 +1,6 @@
+clock 20:30
+color white
+background black
+border blue
+numbers roman
+render

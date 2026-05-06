@@ -1,0 +1,6 @@
+clock 10:00
+repeat 2 {
+  add 1 hours
+  sub 10 minutes
+}
+render

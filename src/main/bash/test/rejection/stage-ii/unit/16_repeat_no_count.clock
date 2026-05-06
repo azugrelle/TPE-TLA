@@ -1,0 +1,5 @@
+clock 10:00
+repeat {
+  add 5 minutes
+}
+render

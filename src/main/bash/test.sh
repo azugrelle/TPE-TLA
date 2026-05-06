@@ -13,14 +13,15 @@ STATUS=0
 echo "Compiler should accept..."
 echo ""
 
-for test in $(ls src/test/c/accept/); do
-	cat "src/test/c/accept/$test" | ".build/Flex-Bison-Compiler" >/dev/null 2>&1
+for test in $(find src/main/bash/test/acceptance/stage-ii -name "*.clock" | sort); do
+	cat "$test" | ".build/Flex-Bison-Compiler" >/dev/null 2>&1
 	RESULT="$?"
+	NAME="$(basename $test)"
 	if [ "$RESULT" == "0" ]; then
-		echo -e "    $test, ${GREEN}and it does${OFF} (status $RESULT)"
+		echo -e "    $NAME, ${GREEN}and it does${OFF} (status $RESULT)"
 	else
 		STATUS=1
-		echo -e "    $test, ${RED}but it rejects${OFF} (status $RESULT)"
+		echo -e "    $NAME, ${RED}but it rejects${OFF} (status $RESULT)"
 	fi
 done
 echo ""
@@ -28,14 +29,15 @@ echo ""
 echo "Compiler should reject..."
 echo ""
 
-for test in $(ls src/test/c/reject/); do
-	cat "src/test/c/reject/$test" | ".build/Flex-Bison-Compiler" >/dev/null 2>&1
+for test in $(find src/main/bash/test/rejection/stage-ii -name "*.clock" | sort); do
+	cat "$test" | ".build/Flex-Bison-Compiler" >/dev/null 2>&1
 	RESULT="$?"
+	NAME="$(basename $test)"
 	if [ "$RESULT" != "0" ]; then
-		echo -e "    $test, ${GREEN}and it does${OFF} (status $RESULT)"
+		echo -e "    $NAME, ${GREEN}and it does${OFF} (status $RESULT)"
 	else
 		STATUS=1
-		echo -e "    $test, ${RED}but it accepts${OFF} (status $RESULT)"
+		echo -e "    $NAME, ${RED}but it accepts${OFF} (status $RESULT)"
 	fi
 done
 echo ""

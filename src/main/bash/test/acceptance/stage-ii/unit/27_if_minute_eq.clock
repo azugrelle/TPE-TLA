@@ -1,0 +1,5 @@
+clock 10:30
+if (minute == 30) {
+  next hour
+}
+render

@@ -1,0 +1,5 @@
+clock 10:00
+if ( == 10) {
+  add 1 hours
+}
+render

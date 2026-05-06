@@ -1,0 +1,5 @@
+clock 08:00
+if (hour < 12) {
+  add 4 hours
+}
+render

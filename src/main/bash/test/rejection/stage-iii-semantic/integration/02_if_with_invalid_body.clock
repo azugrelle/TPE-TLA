@@ -1,0 +1,5 @@
+clock 10:00
+if (hour == 10) {
+  set minute 99
+}
+render

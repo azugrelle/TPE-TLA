@@ -102,6 +102,7 @@ whitespace			[[:space:]]+
 ")"									{ return SymbolLexemeAction(CLOSE_PARENTHESIS); }
 
 [0-9]+								{ return IntegerLexemeAction(); }
+[a-zA-Z]+							{ return UnknownLexemeAction(); }
 
 "//"								{ return EnterLineCommentLexemeAction(LINE_COMMENT); }
 <LINE_COMMENT>"\n"					{ return LeaveLineCommentLexemeAction(); }
