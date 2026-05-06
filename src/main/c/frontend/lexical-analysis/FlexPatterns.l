@@ -56,8 +56,8 @@ whitespace			[[:space:]]+
 
 "clock"								{ return KeywordLexemeAction(CLOCK); }
 "render"							{ return KeywordLexemeAction(RENDER); }
-"add"								{ return KeywordLexemeAction(ADD_KW); }
-"sub"								{ return KeywordLexemeAction(SUB_KW); }
+"add"								{ return KeywordLexemeAction(ADD); }
+"sub"								{ return KeywordLexemeAction(SUB); }
 "set"								{ return KeywordLexemeAction(SET); }
 "hour"								{ return KeywordLexemeAction(HOUR); }
 "minute"							{ return KeywordLexemeAction(MINUTE); }
@@ -69,7 +69,7 @@ whitespace			[[:space:]]+
 "repeat"							{ return KeywordLexemeAction(REPEAT); }
 "if"								{ return KeywordLexemeAction(IF); }
 "else"								{ return KeywordLexemeAction(ELSE); }
-"color"								{ return KeywordLexemeAction(COLOR_KW); }
+"color"								{ return KeywordLexemeAction(COLOR); }
 "background"						{ return KeywordLexemeAction(BACKGROUND); }
 "border"							{ return KeywordLexemeAction(BORDER); }
 "numbers"							{ return KeywordLexemeAction(NUMBERS); }

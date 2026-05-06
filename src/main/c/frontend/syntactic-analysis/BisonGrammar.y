@@ -7,8 +7,6 @@
 /**
  * The error reporting function for Bison parser.
  *
- * @todo Add location to the grammar and "pushToken" API function.
- *
  * @see https://www.gnu.org/software/bison/manual/html_node/Error-Reporting-Function.html
  * @see https://www.gnu.org/software/bison/manual/html_node/Tracking-Locations.html
  */
@@ -29,76 +27,188 @@ void yyerror(const YYLTYPE * location, const char * message) {}
 	signed int integer;
 	TokenLabel token;
 
-	/** Non-terminals. */
+	/** Non-terminals (AST nodes). */
 
-	Constant * constant;
-	Expression * expression;
-	Factor * factor;
 	Program * program;
+	InstructionList * instructionList;
+	Instruction * instruction;
+	ClockInstruction * clockInstruction;
+	ArithmeticInstruction * arithmeticInstruction;
+	SetInstruction * setInstruction;
+	StyleInstruction * styleInstruction;
+	TimezoneInstruction * timezoneInstruction;
+	RepeatInstruction * repeatInstruction;
+	IfInstruction * ifInstruction;
+	Condition * condition;
+	TimezoneExpr * timezoneExpr;
 }
 
 /**
- * Destructors. This functions are executed after the parsing ends, so if the
- * AST must be used in the following phases of the compiler you shouldn't used
- * this approach for the AST root node ("program" non-terminal, in this
- * grammar), or it will drop the entire tree even if the parsing succeeds.
+ * Destructors run when Bison discards a symbol during error recovery or at
+ * the end of a failed parse.  We skip <program> intentionally: if parsing
+ * succeeds the root is handed to the compiler state and must not be freed.
  *
  * @see https://www.gnu.org/software/bison/manual/html_node/Destructor-Decl.html
  */
-%destructor { destroyConstant($$); } <constant>
-%destructor { destroyExpression($$); } <expression>
-%destructor { destroyFactor($$); } <factor>
+%destructor { destroyInstructionList($$); } <instructionList>
+%destructor { destroyInstruction($$); }     <instruction>
+%destructor { destroyCondition($$); }       <condition>
+%destructor { destroyTimezoneExpr($$); }    <timezoneExpr>
 
-/** Terminals. */
-%token <integer> INTEGER
+/** Terminals – keywords. */
+%token <token> CLOCK
+%token <token> RENDER
 %token <token> ADD
-%token <token> CLOSE_BRACE
-%token <token> CLOSE_COMMENT
-%token <token> CLOSE_PARENTHESIS
-%token <token> DIV
-%token <token> MUL
-%token <token> OPEN_BRACE
-%token <token> OPEN_COMMENT
-%token <token> OPEN_PARENTHESIS
 %token <token> SUB
+%token <token> SET
+%token <token> HOUR
+%token <token> MINUTE
+%token <token> HOURS
+%token <token> MINUTES
+%token <token> ROUND
+%token <token> TO
+%token <token> NEXT
+%token <token> REPEAT
+%token <token> IF
+%token <token> ELSE
+%token <token> COLOR
+%token <token> BACKGROUND
+%token <token> BORDER
+%token <token> NUMBERS
+%token <token> ARABIC
+%token <token> ROMAN
+%token <token> BLACK
+%token <token> WHITE
+%token <token> GREEN
+%token <token> RED
+%token <token> BLUE
+%token <token> AND
+%token <token> OR
+%token <token> NOT
+%token <token> UTC
 
-%token <token> IGNORED
+/** Terminals – operators and symbols. */
+%token <token> ARROW
+%token <token> EQ
+%token <token> NEQ
+%token <token> LTE
+%token <token> GTE
+%token <token> LT
+%token <token> GT
+%token <token> PLUS
+%token <token> MINUS
+%token <token> COLON
+%token <token> OPEN_BRACE
+%token <token> CLOSE_BRACE
+%token <token> OPEN_PARENTHESIS
+%token <token> CLOSE_PARENTHESIS
+
+/** Terminal – catch-all for unknown lexemes (triggers a syntax error). */
 %token <token> UNKNOWN
 
+/** Terminal – integer literal (carries its numeric value). */
+%token <integer> INTEGER
+
 /** Non-terminals. */
-%type <constant> constant
-%type <expression> expression
-%type <factor> factor
-%type <program> program
+%type <program>         program
+%type <instructionList> instructionList
+%type <instruction>     instruction
+%type <integer>         integer
+%type <integer>         color
+%type <integer>         numberType
+%type <timezoneExpr>    timezoneExpr
+%type <condition>       condition
+%type <integer>         comparator
 
 /**
  * Precedence and associativity.
  *
  * @see https://en.cppreference.com/w/cpp/language/operator_precedence.html
  * @see https://www.gnu.org/software/bison/manual/html_node/Precedence.html
- */
-%left ADD SUB
-%left MUL DIV
+*/
+%left OR
+%left AND
+%right NOT
 
 %%
 
 // IMPORTANT: To use λ in the following grammar, use the %empty symbol.
 
-program: expression											{ $$ = ExpressionProgramSemanticAction($1); }
+program:
+	instructionList							{ $$ = ProgramSemanticAction($1); }
 	;
 
-expression: expression[left] ADD expression[right]			{ $$ = ArithmeticExpressionSemanticAction($left, $right, ADDITION); }
-	| expression[left] DIV expression[right]				{ $$ = ArithmeticExpressionSemanticAction($left, $right, DIVISION); }
-	| expression[left] MUL expression[right]				{ $$ = ArithmeticExpressionSemanticAction($left, $right, MULTIPLICATION); }
-	| expression[left] SUB expression[right]				{ $$ = ArithmeticExpressionSemanticAction($left, $right, SUBTRACTION); }
-	| factor												{ $$ = FactorExpressionSemanticAction($1); }
+instructionList:
+	instruction instructionList				{ $$ = InstructionListSemanticAction($1, $2); }
+	| %empty								{ $$ = EmptyInstructionListSemanticAction(); }
 	;
 
-factor: OPEN_PARENTHESIS expression CLOSE_PARENTHESIS		{ $$ = ExpressionFactorSemanticAction($2); }
-	| constant												{ $$ = ConstantFactorSemanticAction($1); }
+instruction:
+	CLOCK integer COLON integer				{ $$ = ClockSemanticAction($2, $4); }
+	| RENDER								{ $$ = RenderSemanticAction(); }
+	| ADD integer HOURS						{ $$ = AddSemanticAction($2, HOURS_UNIT); }
+	| ADD integer MINUTES					{ $$ = AddSemanticAction($2, MINUTES_UNIT); }
+	| SUB integer HOURS						{ $$ = SubSemanticAction($2, HOURS_UNIT); }
+	| SUB integer MINUTES					{ $$ = SubSemanticAction($2, MINUTES_UNIT); }
+	| SET HOUR integer						{ $$ = SetHourSemanticAction($3); }
+	| SET MINUTE integer					{ $$ = SetMinuteSemanticAction($3); }
+	| ROUND TO INTEGER MINUTES				{ $$ = RoundSemanticAction(); }
+	| NEXT HOUR								{ $$ = NextHourSemanticAction(); }
+	| COLOR color							{ $$ = ColorSemanticAction($2); }
+	| BACKGROUND color						{ $$ = BackgroundSemanticAction($2); }
+	| BORDER color							{ $$ = BorderSemanticAction($2); }
+	| NUMBERS numberType					{ $$ = NumbersSemanticAction($2); }
+	| timezoneExpr ARROW timezoneExpr		{ $$ = TimezoneSemanticAction($1, $3); }
+	| REPEAT INTEGER OPEN_BRACE instructionList CLOSE_BRACE
+											{ $$ = RepeatSemanticAction($2, $4); }
+	| IF OPEN_PARENTHESIS condition CLOSE_PARENTHESIS
+	  OPEN_BRACE instructionList CLOSE_BRACE
+											{ $$ = IfSemanticAction($3, $6, NULL); }
+	| IF OPEN_PARENTHESIS condition CLOSE_PARENTHESIS
+	  OPEN_BRACE instructionList CLOSE_BRACE
+	  ELSE OPEN_BRACE instructionList CLOSE_BRACE
+											{ $$ = IfSemanticAction($3, $6, $10); }
 	;
 
-constant: INTEGER											{ $$ = IntegerConstantSemanticAction($1); }
+integer:
+	INTEGER									{ $$ = $1; }
+	;
+
+color:
+	BLACK									{ $$ = COLOR_BLACK; }
+	| WHITE									{ $$ = COLOR_WHITE; }
+	| GREEN									{ $$ = COLOR_GREEN; }
+	| RED									{ $$ = COLOR_RED; }
+	| BLUE									{ $$ = COLOR_BLUE; }
+	;
+
+numberType:
+	ARABIC									{ $$ = NUMBER_ARABIC; }
+	| ROMAN									{ $$ = NUMBER_ROMAN; }
+	;
+
+timezoneExpr:
+	UTC										{ $$ = TimezoneExprSemanticAction(0); }
+	| UTC PLUS INTEGER						{ $$ = TimezoneExprSemanticAction($3); }
+	| UTC MINUS INTEGER						{ $$ = TimezoneExprSemanticAction(-$3); }
+	;
+
+condition:
+	HOUR comparator INTEGER					{ $$ = SimpleConditionSemanticAction(COMP_HOUR, $2, $3); }
+	| MINUTE comparator INTEGER				{ $$ = SimpleConditionSemanticAction(COMP_MINUTE, $2, $3); }
+	| condition AND condition				{ $$ = AndConditionSemanticAction($1, $3); }
+	| condition OR condition				{ $$ = OrConditionSemanticAction($1, $3); }
+	| NOT condition							{ $$ = NotConditionSemanticAction($2); }
+	| OPEN_PARENTHESIS condition CLOSE_PARENTHESIS	{ $$ = $2; }
+	;
+
+comparator:
+	EQ										{ $$ = CMP_EQ; }
+	| NEQ									{ $$ = CMP_NEQ; }
+	| LTE									{ $$ = CMP_LTE; }
+	| GTE									{ $$ = CMP_GTE; }
+	| LT									{ $$ = CMP_LT; }
+	| GT									{ $$ = CMP_GT; }
 	;
 
 %%
