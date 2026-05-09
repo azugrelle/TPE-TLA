@@ -100,8 +100,12 @@ Instruction * SetMinuteSemanticAction(int value) {
 	return instruction;
 }
 
-Instruction * RoundSemanticAction(void) {
+Instruction * RoundSemanticAction(int value) {
 	_logSyntacticAnalyzerAction(__FUNCTION__);
+	if (value != 5) {
+		logError(_logger, "\"round to\" only accepts 5 minutes, got %d.", value);
+		return NULL;
+	}
 	Instruction * instruction = calloc(1, sizeof(Instruction));
 	instruction->type = INSTR_ROUND;
 	return instruction;

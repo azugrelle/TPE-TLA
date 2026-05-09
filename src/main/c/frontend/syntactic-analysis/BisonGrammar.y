@@ -27,7 +27,7 @@ void yyerror(const YYLTYPE * location, const char * message) {}
 	signed int integer;
 	TokenLabel token;
 
-	/** Non-terminals (AST nodes). */
+	/** Non-terminals */
 
 	Program * program;
 	InstructionList * instructionList;
@@ -44,9 +44,10 @@ void yyerror(const YYLTYPE * location, const char * message) {}
 }
 
 /**
- * Destructors run when Bison discards a symbol during error recovery or at
- * the end of a failed parse.  We skip <program> intentionally: if parsing
- * succeeds the root is handed to the compiler state and must not be freed.
+ * Destructors. This functions are executed after the parsing ends, so if the
+ * AST must be used in the following phases of the compiler you shouldn't used
+ * this approach for the AST root node ("program" non-terminal, in this
+ * grammar), or it will drop the entire tree even if the parsing succeeds.
  *
  * @see https://www.gnu.org/software/bison/manual/html_node/Destructor-Decl.html
  */
@@ -103,7 +104,7 @@ void yyerror(const YYLTYPE * location, const char * message) {}
 %token <token> OPEN_PARENTHESIS
 %token <token> CLOSE_PARENTHESIS
 
-/** Terminal – catch-all for unknown lexemes (triggers a syntax error). */
+/** Terminal – catch-all for unknown lexemes */
 %token <token> UNKNOWN
 
 /** Terminal – integer literal (carries its numeric value). */
@@ -152,7 +153,7 @@ instruction:
 	| SUB integer MINUTES					{ $$ = SubSemanticAction($2, MINUTES_UNIT); }
 	| SET HOUR integer						{ $$ = SetHourSemanticAction($3); }
 	| SET MINUTE integer					{ $$ = SetMinuteSemanticAction($3); }
-	| ROUND TO INTEGER MINUTES				{ $$ = RoundSemanticAction(); }
+	| ROUND TO INTEGER MINUTES				{ $$ = RoundSemanticAction($3); if ($$ == NULL) YYABORT; }
 	| NEXT HOUR								{ $$ = NextHourSemanticAction(); }
 	| COLOR color							{ $$ = ColorSemanticAction($2); }
 	| BACKGROUND color						{ $$ = BackgroundSemanticAction($2); }

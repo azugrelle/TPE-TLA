@@ -26,7 +26,7 @@ Instruction * AddSemanticAction(int value, TimeUnit unit);
 Instruction * SubSemanticAction(int value, TimeUnit unit);
 Instruction * SetHourSemanticAction(int value);
 Instruction * SetMinuteSemanticAction(int value);
-Instruction * RoundSemanticAction(void);
+Instruction * RoundSemanticAction(int value);
 Instruction * NextHourSemanticAction(void);
 Instruction * ColorSemanticAction(Color color);
 Instruction * BackgroundSemanticAction(Color color);
