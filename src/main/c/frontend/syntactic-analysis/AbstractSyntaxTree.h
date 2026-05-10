@@ -1,8 +1,8 @@
 #ifndef ABSTRACT_SYNTAX_TREE_HEADER
 #define ABSTRACT_SYNTAX_TREE_HEADER
 
-#include "../support/logging/Logger.h"
-#include "../support/type/ModuleDestructor.h"
+#include "../../support/logging/Logger.h"
+#include "../../support/type/ModuleDestructor.h"
 #include <stdlib.h>
 
 ModuleDestructor initializeAbstractSyntaxTreeModule();
