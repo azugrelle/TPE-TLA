@@ -34,6 +34,9 @@ void yyerror(const YYLTYPE * location, const char * message) {}
 	Instruction * instruction;
 	Condition * condition;
 	TimezoneExpr * timezoneExpr;
+	Color color;
+	NumberType numberType;
+	Comparator comparator;
 }
 
 /**
@@ -108,11 +111,11 @@ void yyerror(const YYLTYPE * location, const char * message) {}
 %type <instructionList> instructionList
 %type <instruction>     instruction
 %type <integer>         integer
-%type <integer>         color
-%type <integer>         numberType
+%type <color>           color
+%type <numberType>      numberType
 %type <timezoneExpr>    timezoneExpr
 %type <condition>       condition
-%type <integer>         comparator
+%type <comparator>      comparator
 
 /**
  * Precedence and associativity.
