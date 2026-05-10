@@ -32,13 +32,6 @@ void yyerror(const YYLTYPE * location, const char * message) {}
 	Program * program;
 	InstructionList * instructionList;
 	Instruction * instruction;
-	ClockInstruction * clockInstruction;
-	ArithmeticInstruction * arithmeticInstruction;
-	SetInstruction * setInstruction;
-	StyleInstruction * styleInstruction;
-	TimezoneInstruction * timezoneInstruction;
-	RepeatInstruction * repeatInstruction;
-	IfInstruction * ifInstruction;
 	Condition * condition;
 	TimezoneExpr * timezoneExpr;
 }
