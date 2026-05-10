@@ -146,14 +146,14 @@ instruction:
 	| SUB integer MINUTES					{ $$ = SubSemanticAction($2, MINUTES_UNIT); }
 	| SET HOUR integer						{ $$ = SetHourSemanticAction($3); }
 	| SET MINUTE integer					{ $$ = SetMinuteSemanticAction($3); }
-	| ROUND TO INTEGER MINUTES				{ $$ = RoundSemanticAction($3); if ($$ == NULL) YYABORT; }
+	| ROUND TO integer MINUTES				{ $$ = RoundSemanticAction($3); if ($$ == NULL) YYABORT; }
 	| NEXT HOUR								{ $$ = NextHourSemanticAction(); }
 	| COLOR color							{ $$ = ColorSemanticAction($2); }
 	| BACKGROUND color						{ $$ = BackgroundSemanticAction($2); }
 	| BORDER color							{ $$ = BorderSemanticAction($2); }
 	| NUMBERS numberType					{ $$ = NumbersSemanticAction($2); }
 	| timezoneExpr ARROW timezoneExpr		{ $$ = TimezoneSemanticAction($1, $3); }
-	| REPEAT INTEGER OPEN_BRACE instructionList CLOSE_BRACE
+	| REPEAT integer OPEN_BRACE instructionList CLOSE_BRACE
 											{ $$ = RepeatSemanticAction($2, $4); }
 	| IF OPEN_PARENTHESIS condition CLOSE_PARENTHESIS
 	  OPEN_BRACE instructionList CLOSE_BRACE
