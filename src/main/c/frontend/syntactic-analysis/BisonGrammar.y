@@ -25,6 +25,7 @@ void yyerror(const YYLTYPE * location, const char * message) {}
 	/** Terminals. */
 
 	signed int integer;
+	char * string;
 	TokenLabel token;
 
 	/** Non-terminals */
@@ -106,6 +107,9 @@ void yyerror(const YYLTYPE * location, const char * message) {}
 /** Terminal – integer literal (carries its numeric value). */
 %token <integer> INTEGER
 
+/** Terminal – user-defined clock name (carries the name as a heap string). */
+%token <string> NAME
+
 /** Non-terminals. */
 %type <program>         program
 %type <instructionList> instructionList
@@ -141,7 +145,7 @@ instructionList:
 	;
 
 instruction:
-	CLOCK integer COLON integer				{ $$ = ClockSemanticAction($2, $4); }
+	CLOCK NAME integer COLON integer		{ $$ = ClockSemanticAction($2, $3, $5); }
 	| RENDER								{ $$ = RenderSemanticAction(); }
 	| ADD integer HOURS						{ $$ = AddSemanticAction($2, HOURS_UNIT); }
 	| ADD integer MINUTES					{ $$ = AddSemanticAction($2, MINUTES_UNIT); }

@@ -18,6 +18,7 @@ extern CompilationStatus KeywordLexemeAction(TokenLabel label);
 extern CompilationStatus OperatorLexemeAction(TokenLabel label);
 extern CompilationStatus SymbolLexemeAction(TokenLabel label);
 extern CompilationStatus IntegerLexemeAction();
+extern CompilationStatus NameLexemeAction();
 extern CompilationStatus EnterLineCommentLexemeAction(FlexContext context);
 extern CompilationStatus LeaveLineCommentLexemeAction();
 extern CompilationStatus EnterMultilineCommentLexemeAction(FlexContext context);
@@ -102,7 +103,7 @@ whitespace			[[:space:]]+
 ")"									{ return SymbolLexemeAction(CLOSE_PARENTHESIS); }
 
 [0-9]+								{ return IntegerLexemeAction(); }
-[a-zA-Z]+							{ return UnknownLexemeAction(); }
+[a-zA-Z][a-zA-Z0-9_]*				{ return NameLexemeAction(); }
 
 "//"								{ return EnterLineCommentLexemeAction(LINE_COMMENT); }
 <LINE_COMMENT>"\n"					{ return LeaveLineCommentLexemeAction(); }

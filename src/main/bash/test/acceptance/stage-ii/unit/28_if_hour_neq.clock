@@ -1,4 +1,4 @@
-clock 10:00
+clock reloj 10:00
 if (hour != 5) {
   add 1 hours
 }

@@ -21,6 +21,7 @@ CompilationStatus KeywordLexemeAction(TokenLabel label);
 CompilationStatus OperatorLexemeAction(TokenLabel label);
 CompilationStatus SymbolLexemeAction(TokenLabel label);
 CompilationStatus IntegerLexemeAction();
+CompilationStatus NameLexemeAction();
 CompilationStatus EnterLineCommentLexemeAction(FlexContext context);
 CompilationStatus LeaveLineCommentLexemeAction();
 CompilationStatus EnterMultilineCommentLexemeAction(FlexContext context);

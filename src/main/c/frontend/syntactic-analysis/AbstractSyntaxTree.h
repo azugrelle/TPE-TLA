@@ -57,7 +57,7 @@ struct InstructionList {
 struct Instruction {
 	InstructionType type;
 	union {
-		struct { int hour; int minute; } clock;
+		struct { char * name; int hour; int minute; } clock;
 		struct { int value; TimeUnit unit; } arithmetic;
 		struct { int value; } setTime;
 		struct { Color color; } style;

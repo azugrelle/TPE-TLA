@@ -1,4 +1,4 @@
-clock 10:20
+clock reloj 10:20
 if (hour == 10 OR minute < 30 AND hour == 12) {
   set minute 0
 }

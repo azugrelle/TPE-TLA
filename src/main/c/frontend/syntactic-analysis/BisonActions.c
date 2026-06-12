@@ -50,10 +50,11 @@ InstructionList * EmptyInstructionListSemanticAction(void) {
 	return NULL;
 }
 
-Instruction * ClockSemanticAction(int hour, int minute) {
+Instruction * ClockSemanticAction(char * name, int hour, int minute) {
 	_logSyntacticAnalyzerAction(__FUNCTION__);
 	Instruction * instruction = calloc(1, sizeof(Instruction));
 	instruction->type = INSTR_CLOCK;
+	instruction->clock.name = name;
 	instruction->clock.hour = hour;
 	instruction->clock.minute = minute;
 	return instruction;

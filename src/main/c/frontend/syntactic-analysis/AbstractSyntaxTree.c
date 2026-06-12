@@ -43,6 +43,9 @@ void destroyInstruction(Instruction * instruction) {
 	logDebugging(_logger, "Executing destructor: %s", __FUNCTION__);
 	if (instruction == NULL) return;
 	switch (instruction->type) {
+		case INSTR_CLOCK:
+			free(instruction->clock.name);
+			break;
 		case INSTR_REPEAT:
 			destroyInstructionList(instruction->repeat.body);
 			break;

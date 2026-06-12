@@ -1,4 +1,4 @@
 /* este es un comentario
    multilinea */
-clock 12:00
+clock reloj 12:00
 render

@@ -1,4 +1,4 @@
-clock 10:45
+clock reloj 10:45
 if (minute >= 30) {
   next hour
 }
