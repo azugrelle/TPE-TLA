@@ -1,57 +1,56 @@
-// #ifndef CALCULATOR_HEADER
-// #define CALCULATOR_HEADER
+#ifndef CALCULATOR_HEADER
+#define CALCULATOR_HEADER
 
-// /**
-//  * We reuse the types from the AST for convenience, but you should separate
-//  * the layers of the backend and frontend using another group of
-//  * domain-specific models or DTOs (Data Transfer Objects).
-//  */
-// #include "../../frontend/syntactic-analysis/AbstractSyntaxTree.h"
-// #include "../../support/logging/Logger.h"
-// #include "../../support/type/CompilerState.h"
-// #include "../../support/type/ModuleDestructor.h"
-// #include <limits.h>
-// #include <stdbool.h>
+#include "../../frontend/syntactic-analysis/AbstractSyntaxTree.h"
+#include "../../support/logging/Logger.h"
+#include "../../support/type/ModuleDestructor.h"
+#include <stdbool.h>
 
-// /** Initialize module's internal state. */
-// ModuleDestructor initializeCalculatorModule();
+/** Initialize module's internal state. */
+ModuleDestructor initializeCalculatorModule(void);
 
-// /**
-//  * The result of a computation. It's considered valid only if "succeed" is
-//  * true.
-//  */
-// typedef struct {
-// 	bool succeeded;
-// 	int value;
-// } ComputationResult;
+/**
+ * The resolved visual style of a clock, after applying every styling
+ * instruction that affects it. Holds the values used later by the generator.
+ */
+typedef struct {
+	Color handColor;       // default: COLOR_BLACK
+	Color bgColor;         // default: COLOR_WHITE
+	Color borderColor;     // default: COLOR_BLACK
+	NumberType numbers;    // default: NUMBER_ARABIC
+} StyleState;
 
-// typedef ComputationResult (*BinaryOperator)(const int, const int);
+/**
+ * The final state of a single named clock once the whole program has been
+ * simulated. The "name" is owned by this structure (a private copy).
+ */
+typedef struct {
+	char * name;
+	int hour;              // 0–23
+	int minute;            // 0–59
+	StyleState style;
+	bool rendered;         // true if a 'render' was reached after this clock was declared
+} ClockState;
 
-// /** Arithmetic operations. */
+/**
+ * A dynamic array holding the final state of every clock declared by the
+ * program, in declaration order.
+ */
+typedef struct {
+	ClockState * clocks;
+	int count;
+	int capacity;
+} ClockStateList;
 
-// ComputationResult add(const int leftAddend, const int rightAddend);
-// ComputationResult divide(const int dividend, const int divisor);
-// ComputationResult multiply(const int multiplicand, const int multiplier);
-// ComputationResult subtract(const int minuend, const int subtract);
+/**
+ * Simulates the execution of the program and returns the final state of every
+ * clock it declares. The input AST is expected to be semantically valid (see
+ * the semantic-analysis phase). Returns NULL only on allocation failure; the
+ * result must be released with destroyClockStateList.
+ */
+ClockStateList * calculateClockStates(Program * program);
 
-// /**
-//  * Computes the final value of a mathematical constant.
-//  */
-// ComputationResult computeConstant(Constant * constant);
+/** Releases a ClockStateList and every resource it owns. */
+void destroyClockStateList(ClockStateList * list);
 
-// /**
-//  * Computes the final value of a mathematical expression.
-//  */
-// ComputationResult computeExpression(Expression * expression);
-
-// /**
-//  * Computes the final value of a mathematical factor.
-//  */
-// ComputationResult computeFactor(Factor * factor);
-
-// /**
-//  * Computes the program value using the current compiler state.
-//  */
-// ComputationResult executeCalculator(CompilerState * compilerState);
-
-// #endif
+#endif
