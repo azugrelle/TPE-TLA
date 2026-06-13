@@ -1,20 +1,19 @@
-// #ifndef GENERATOR_HEADER
-// #define GENERATOR_HEADER
+#ifndef GENERATOR_HEADER
+#define GENERATOR_HEADER
 
-// #include "../../frontend/syntactic-analysis/AbstractSyntaxTree.h"
-// #include "../../support/language/String.h"
-// #include "../../support/logging/Logger.h"
-// #include "../../support/type/CompilerState.h"
-// #include "../../support/type/ModuleDestructor.h"
-// #include <stdarg.h>
-// #include <stdio.h>
+#include "../../support/logging/Logger.h"
+#include "../../support/type/ModuleDestructor.h"
+#include "../domain-specific/Calculator.h"
+#include <stdio.h>
 
-// /** Initialize module's internal state. */
-// ModuleDestructor initializeGeneratorModule();
+/** Initialize module's internal state. */
+ModuleDestructor initializeGeneratorModule(void);
 
-// /**
-//  * Generates the final output using the current compiler state.
-//  */
-// void executeGenerator(CompilerState * compilerState);
+/**
+ * Generates a self-contained HTML document (with inline SVG) to standard
+ * output, drawing one analog clock per rendered ClockState. The document has
+ * no external dependencies and can be opened directly in any browser.
+ */
+void generateHTML(ClockStateList * clocks);
 
-// #endif
+#endif

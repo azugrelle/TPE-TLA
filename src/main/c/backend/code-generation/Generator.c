@@ -1,178 +1,177 @@
-// #include "Generator.h"
+#include "Generator.h"
+#include <math.h>
 
-// /* MODULE INTERNAL STATE */
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
-// const char _indentationCharacter = ' ';
-// const char _indentationSize = 4;
-// static Logger * _logger = NULL;
+/* MODULE INTERNAL STATE */
 
-// /** Shutdown module's internal state. */
-// void _shutdownGeneratorModule() {
-// 	if (_logger != NULL) {
-// 		logDebugging(_logger, "Destroying module: Generator...");
-// 		destroyLogger(_logger);
-// 		_logger = NULL;
-// 	}
-// }
+static Logger * _logger = NULL;
 
-// ModuleDestructor initializeGeneratorModule() {
-// 	_logger = createLogger("Generator");
-// 	return _shutdownGeneratorModule;
-// }
+void _shutdownGeneratorModule() {
+	if (_logger != NULL) {
+		logDebugging(_logger, "Destroying module: Generator...");
+		destroyLogger(_logger);
+		_logger = NULL;
+	}
+}
 
-// /** PRIVATE FUNCTIONS */
+ModuleDestructor initializeGeneratorModule(void) {
+	_logger = createLogger("Generator");
+	return _shutdownGeneratorModule;
+}
 
-// static char * _indentation(const unsigned int indentationLevel);
-// static const char _expressionTypeToCharacter(const ExpressionType type);
-// static void _generateConstant(const unsigned int indentationLevel, Constant * constant);
-// static void _generateEpilogue(const int value);
-// static void _generateExpression(const unsigned int indentationLevel, Expression * expression);
-// static void _generateFactor(const unsigned int indentationLevel, Factor * factor);
-// static void _generateProgram(Program * program);
-// static void _generatePrologue(void);
-// static void _output(const unsigned int indentationLevel, const char * const format, ...);
+/* PRIVATE FUNCTIONS */
 
-// /**
-//  * Converts and expression type to the proper character of the operation
-//  * involved, or returns '\0' if that's not possible.
-//  */
-// static const char _expressionTypeToCharacter(const ExpressionType type) {
-// 	switch (type) {
-// 		case ADDITION: return '+';
-// 		case DIVISION: return '/';
-// 		case MULTIPLICATION: return '*';
-// 		case SUBTRACTION: return '-';
-// 		default:
-// 			logError(_logger, "The specified expression type cannot be converted into character: %d", type);
-// 			return '\0';
-// 	}
-// }
+#define HOUR_MARKS 12
 
-// /**
-//  * Generates the output of a constant.
-//  */
-// static void _generateConstant(const unsigned int indentationLevel, Constant * constant) {
-// 	_output(indentationLevel, "%s", "[ $C$, circle, draw, black!20\n");
-// 	_output(1 + indentationLevel, "%s%d%s", "[ $", constant->value, "$, circle, draw ]\n");
-// 	_output(indentationLevel, "%s", "]\n");
-// }
+static const char * ROMAN_NUMERALS[HOUR_MARKS] = {
+	"I", "II", "III", "IV", "V", "VI",
+	"VII", "VIII", "IX", "X", "XI", "XII"
+};
 
-// /**
-//  * Creates the epilogue of the generated output, that is, the final lines that
-//  * completes a valid Latex document.
-//  */
-// static void _generateEpilogue(const int value) {
-// 	_output(0, "%s%d%s",
-// 		"            [ $", value, "$, circle, draw, blue ]\n"
-// 		"        ]\n"
-// 		"    \\end{forest}\n"
-// 		"\\end{document}\n\n"
-// 	);
-// }
+static double toRadians(double degrees) {
+	return degrees * M_PI / 180.0;
+}
 
-// /**
-//  * Generates the output of an expression.
-//  */
-// static void _generateExpression(const unsigned int indentationLevel, Expression * expression) {
-// 	_output(indentationLevel, "%s", "[ $E$, circle, draw, black!20\n");
-// 	switch (expression->type) {
-// 		case ADDITION:
-// 		case DIVISION:
-// 		case MULTIPLICATION:
-// 		case SUBTRACTION:
-// 			_generateExpression(1 + indentationLevel, expression->leftExpression);
-// 			_output(1 + indentationLevel, "%s%c%s", "[ $", _expressionTypeToCharacter(expression->type), "$, circle, draw, purple ]\n");
-// 			_generateExpression(1 + indentationLevel, expression->rightExpression);
-// 			break;
-// 		case FACTOR:
-// 			_generateFactor(1 + indentationLevel, expression->factor);
-// 			break;
-// 		default:
-// 			logError(_logger, "The specified expression type is unknown: %d", expression->type);
-// 			break;
-// 	}
-// 	_output(indentationLevel, "%s", "]\n");
-// }
+/** Maps a Color enum to its CSS/SVG hexadecimal representation. */
+static const char * colorToHex(Color color) {
+	switch (color) {
+		case COLOR_BLACK: return "#000000";
+		case COLOR_WHITE: return "#FFFFFF";
+		case COLOR_GREEN: return "#2ECC71";
+		case COLOR_RED:   return "#E74C3C";
+		case COLOR_BLUE:  return "#3498DB";
+	}
+	return "#000000";
+}
 
-// /**
-//  * Generates the output of a factor.
-//  */
-// static void _generateFactor(const unsigned int indentationLevel, Factor * factor) {
-// 	_output(indentationLevel, "%s", "[ $F$, circle, draw, black!20\n");
-// 	switch (factor->type) {
-// 		case CONSTANT:
-// 			_generateConstant(1 + indentationLevel, factor->constant);
-// 			break;
-// 		case EXPRESSION:
-// 			_output(1 + indentationLevel, "%s", "[ $($, circle, draw, purple ]\n");
-// 			_generateExpression(1 + indentationLevel, factor->expression);
-// 			_output(1 + indentationLevel, "%s", "[ $)$, circle, draw, purple ]\n");
-// 			break;
-// 		default:
-// 			logError(_logger, "The specified factor type is unknown: %d", factor->type);
-// 			break;
-// 	}
-// 	_output(indentationLevel, "%s", "]\n");
-// }
+/** Emits the 12 clock-face numbers, Arabic or Roman according to the style. */
+static void generateNumbers(ClockState * state, FILE * output) {
+	const char * fill = colorToHex(state->style.borderColor);
+	for (int i = 0; i < HOUR_MARKS; ++i) {
+		double angle = toRadians(i * 30.0);
+		double x = sin(angle) * 72.0;
+		double y = -cos(angle) * 72.0 + 5.0;
+		int number = (i == 0) ? 12 : i;
+		char label[8];
+		if (state->style.numbers == NUMBER_ROMAN) {
+			snprintf(label, sizeof(label), "%s", ROMAN_NUMERALS[number - 1]);
+		} else {
+			snprintf(label, sizeof(label), "%d", number);
+		}
+		fprintf(output,
+			"        <text x=\"%.2f\" y=\"%.2f\" text-anchor=\"middle\" font-size=\"14\" fill=\"%s\" font-family=\"sans-serif\">%s</text>\n",
+			x, y, fill, label);
+	}
+}
 
-// /**
-//  * Generates the output of the program.
-//  */
-// static void _generateProgram(Program * program) {
-// 	_generateExpression(3, program->expression);
-// }
+/** Emits the inline SVG drawing for a single clock. */
+static void generateClockSVG(ClockState * state, FILE * output) {
+	const char * bgColor = colorToHex(state->style.bgColor);
+	const char * borderColor = colorToHex(state->style.borderColor);
+	const char * handColor = colorToHex(state->style.handColor);
 
-// /**
-//  * Creates the prologue of the generated output, a Latex document that renders
-//  * a tree thanks to the Forest package.
-//  *
-//  * @see https://ctan.dcc.uchile.cl/graphics/pgf/contrib/forest/forest-doc.pdf
-//  */
-// static void _generatePrologue(void) {
-// 	_output(0, "%s",
-// 		"\\documentclass{standalone}\n\n"
-// 		"\\usepackage[utf8]{inputenc}\n"
-// 		"\\usepackage[T1]{fontenc}\n"
-// 		"\\usepackage{amsmath}\n"
-// 		"\\usepackage{forest}\n"
-// 		"\\usepackage{microtype}\n\n"
-// 		"\\begin{document}\n"
-// 		"    \\centering\n"
-// 		"    \\begin{forest}\n"
-// 		"        [ \\text{$=$}, circle, draw, purple\n"
-// 	);
-// }
+	fprintf(output, "      <svg viewBox=\"-105 -105 210 210\" width=\"200\" height=\"200\">\n");
 
-// /**
-//  * Generates an indentation string for the specified level.
-//  */
-// static char * _indentation(const unsigned int level) {
-// 	return indentation(_indentationCharacter, level, _indentationSize);
-// }
+	// Background and border.
+	fprintf(output, "        <circle r=\"100\" fill=\"%s\" stroke=\"%s\" stroke-width=\"4\"/>\n", bgColor, borderColor);
 
-// /**
-//  * Outputs a formatted string to standard output. The "fflush" instruction
-//  * allows to see the output even close to a failure, because it drops the
-//  * buffering.
-//  */
-// static void _output(const unsigned int indentationLevel, const char * const format, ...) {
-// 	va_list arguments;
-// 	va_start(arguments, format);
-// 	char * indentation = _indentation(indentationLevel);
-// 	char * effectiveFormat = concatenate(2, indentation, format);
-// 	vfprintf(stdout, effectiveFormat, arguments);
-// 	fflush(stdout);
-// 	free(effectiveFormat);
-// 	free(indentation);
-// 	va_end(arguments);
-// }
+	// 12 hour marks (short radial lines near the rim).
+	for (int i = 0; i < HOUR_MARKS; ++i) {
+		double angle = toRadians(i * 30.0);
+		double s = sin(angle);
+		double c = cos(angle);
+		fprintf(output,
+			"        <line x1=\"%.2f\" y1=\"%.2f\" x2=\"%.2f\" y2=\"%.2f\" stroke=\"%s\" stroke-width=\"2\"/>\n",
+			s * 85.0, -c * 85.0, s * 95.0, -c * 95.0, borderColor);
+	}
 
-// /** PUBLIC FUNCTIONS */
+	// Numbers.
+	generateNumbers(state, output);
 
-// void executeGenerator(CompilerState * compilerState) {
-// 	logDebugging(_logger, "Generating final output...");
-// 	_generatePrologue();
-// 	_generateProgram(compilerState->abstractSyntaxtTree);
-// 	_generateEpilogue(compilerState->value);
-// 	logDebugging(_logger, "Generation is done.");
-// }
+	// Hour hand: ANGLE_H = (hour % 12) * 30 + minute * 0.5.
+	double angleHour = (state->hour % 12) * 30.0 + state->minute * 0.5;
+	fprintf(output,
+		"        <line x1=\"0\" y1=\"12\" x2=\"0\" y2=\"-52\" stroke=\"%s\" stroke-width=\"6\" stroke-linecap=\"round\" transform=\"rotate(%.2f)\"/>\n",
+		handColor, angleHour);
+
+	// Minute hand: ANGLE_M = minute * 6.
+	double angleMinute = state->minute * 6.0;
+	fprintf(output,
+		"        <line x1=\"0\" y1=\"16\" x2=\"0\" y2=\"-72\" stroke=\"%s\" stroke-width=\"3\" stroke-linecap=\"round\" transform=\"rotate(%.2f)\"/>\n",
+		handColor, angleMinute);
+
+	// Central pivot.
+	fprintf(output, "        <circle r=\"5\" fill=\"%s\"/>\n", handColor);
+
+	fprintf(output, "      </svg>\n");
+}
+
+/** Emits the document head, embedded stylesheet and the opening container. */
+static void generateDocumentHead(FILE * output) {
+	fprintf(output,
+		"<!DOCTYPE html>\n"
+		"<html lang=\"es\">\n"
+		"<head>\n"
+		"  <meta charset=\"UTF-8\">\n"
+		"  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n"
+		"  <title>Relojes</title>\n"
+		"  <style>\n"
+		"    body { margin: 0; background: #f0f0f0; }\n"
+		"    .clocks-container {\n"
+		"      display: flex;\n"
+		"      flex-wrap: wrap;\n"
+		"      gap: 20px;\n"
+		"      padding: 20px;\n"
+		"      justify-content: center;\n"
+		"    }\n"
+		"    .clock-wrapper {\n"
+		"      display: flex;\n"
+		"      flex-direction: column;\n"
+		"      align-items: center;\n"
+		"      gap: 8px;\n"
+		"    }\n"
+		"    .clock-label {\n"
+		"      font-family: sans-serif;\n"
+		"      font-size: 14px;\n"
+		"    }\n"
+		"  </style>\n"
+		"</head>\n"
+		"<body>\n"
+		"  <div class=\"clocks-container\">\n"
+	);
+}
+
+/** Closes the container and the document. */
+static void generateDocumentTail(FILE * output) {
+	fprintf(output,
+		"  </div>\n"
+		"</body>\n"
+		"</html>\n"
+	);
+}
+
+/* PUBLIC FUNCTIONS */
+
+void generateHTML(ClockStateList * clocks) {
+	logDebugging(_logger, "Generating HTML output...");
+	FILE * output = stdout;
+	generateDocumentHead(output);
+	int emitted = 0;
+	for (int i = 0; i < clocks->count; ++i) {
+		ClockState * state = &clocks->clocks[i];
+		if (!state->rendered) {
+			continue;
+		}
+		fprintf(output, "    <div class=\"clock-wrapper\">\n");
+		fprintf(output, "      <div class=\"clock-label\">%s</div>\n", state->name);
+		generateClockSVG(state, output);
+		fprintf(output, "    </div>\n");
+		emitted++;
+	}
+	generateDocumentTail(output);
+	fflush(output);
+	logDebugging(_logger, "Generated %d clock(s).", emitted);
+}
