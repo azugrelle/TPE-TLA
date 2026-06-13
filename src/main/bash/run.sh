@@ -7,4 +7,4 @@ cd "$BASE_PATH"
 
 INPUT="$1"
 shift 1
-cat "$INPUT" | ".build/Flex-Bison-Compiler" "$@"
+LOGGING_LEVEL="WARNING" ".build/Flex-Bison-Compiler" "$@" < "$INPUT"
