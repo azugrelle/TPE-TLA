@@ -42,5 +42,18 @@ for test in $(find src/main/bash/test/rejection/stage-ii -name "*.clock" | sort)
 done
 echo ""
 
+for test in $(find src/main/bash/test/rejection/stage-iii-semantic -name "*.clock" | sort); do
+	cat "$test" | ".build/Flex-Bison-Compiler" >/dev/null 2>&1
+	RESULT="$?"
+	NAME="$(basename $test)"
+	if [ "$RESULT" != "0" ]; then
+		echo -e "    $NAME, ${GREEN}and it does${OFF} (status $RESULT)"
+	else
+		STATUS=1
+		echo -e "    $NAME, ${RED}but it accepts${OFF} (status $RESULT)"
+	fi
+done
+echo ""
+
 echo "All done."
 exit $STATUS
