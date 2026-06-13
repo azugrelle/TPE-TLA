@@ -1,5 +1,5 @@
 // #include "backend/code-generation/Generator.h"
-// #include "backend/domain-specific/Calculator.h"
+#include "backend/domain-specific/Calculator.h"
 #include "backend/semantic-analysis/SemanticAnalyzer.h"
 #include "frontend/Frontend.h"
 #include "frontend/lexical-analysis/FlexActions.h"
@@ -29,8 +29,8 @@ const int main(const int length, const char ** arguments) {
 		initializeFlexActionsModule(lexicalAnalyzer),
 		initializeBisonActionsModule(&compilerState),
 		initializeFrontendModule(lexicalAnalyzer),
-		initializeSemanticAnalyzerModule()
-		// initializeCalculatorModule(),
+		initializeSemanticAnalyzerModule(),
+		initializeCalculatorModule()
 		// initializeGeneratorModule(),
 	};
 	CompilationStatus compilationStatus = executeSyntacticAnalysis();
@@ -39,18 +39,18 @@ const int main(const int length, const char ** arguments) {
 		// ----------------------------------------------------------------------------------------
 		// Beginning of the Backend... ------------------------------------------------------------
 		compilationStatus = analyzeSemantics(program);
-		// if (compilationStatus == SUCCEEDED) {
-		// 	logDebugging(logger, "Computing expression value...");
-		// 	ComputationResult computationResult = executeCalculator(&compilerState);
-		// 	if (computationResult.succeeded) {
-		// 		compilerState.value = computationResult.value;
-		// 		executeGenerator(&compilerState);
-		// 	}
-		// 	else {
-		// 		logError(logger, "The computation phase rejects the input program.");
-		// 		compilationStatus = FAILED;
-		// 	}
-		// }
+		if (compilationStatus == SUCCEEDED) {
+			logDebugging(logger, "Calculating final clock states...");
+			ClockStateList * clocks = calculateClockStates(program);
+			if (clocks != NULL) {
+				// TODO (sub-phase 2): generateHTML(clocks);
+				destroyClockStateList(clocks);
+			}
+			else {
+				logError(logger, "The calculation phase rejects the input program.");
+				compilationStatus = FAILED;
+			}
+		}
 		// ...end of the Backend. -----------------------------------------------------------------
 		// ----------------------------------------------------------------------------------------
 	}
