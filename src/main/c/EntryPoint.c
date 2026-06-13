@@ -1,4 +1,4 @@
-// #include "backend/code-generation/Generator.h"
+#include "backend/code-generation/Generator.h"
 #include "backend/domain-specific/Calculator.h"
 #include "backend/semantic-analysis/SemanticAnalyzer.h"
 #include "frontend/Frontend.h"
@@ -30,8 +30,8 @@ const int main(const int length, const char ** arguments) {
 		initializeBisonActionsModule(&compilerState),
 		initializeFrontendModule(lexicalAnalyzer),
 		initializeSemanticAnalyzerModule(),
-		initializeCalculatorModule()
-		// initializeGeneratorModule(),
+		initializeCalculatorModule(),
+		initializeGeneratorModule()
 	};
 	CompilationStatus compilationStatus = executeSyntacticAnalysis();
 	Program * program = compilerState.abstractSyntaxtTree;
@@ -43,7 +43,7 @@ const int main(const int length, const char ** arguments) {
 			logDebugging(logger, "Calculating final clock states...");
 			ClockStateList * clocks = calculateClockStates(program);
 			if (clocks != NULL) {
-				// TODO (sub-phase 2): generateHTML(clocks);
+				generateHTML(clocks);
 				destroyClockStateList(clocks);
 			}
 			else {
