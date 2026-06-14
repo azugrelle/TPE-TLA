@@ -11,7 +11,7 @@ ModuleDestructor initializeGeneratorModule(void);
 
 /**
  * Generates a self-contained HTML document (with inline SVG) to standard
- * output, drawing one analog clock per rendered ClockState. The document has
+ * output, drawing one analog clock per declared ClockState. The document has
  * no external dependencies and can be opened directly in any browser.
  */
 void generateHTML(ClockStateList * clocks);

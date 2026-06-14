@@ -2,4 +2,3 @@ clock 10:00
 if (second == 30) {
   add 1 hours
 }
-render

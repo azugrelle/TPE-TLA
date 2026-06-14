@@ -55,7 +55,6 @@ void yyerror(const YYLTYPE * location, const char * message) {}
 
 /** Terminals – keywords. */
 %token <token> CLOCK
-%token <token> RENDER
 %token <token> ADD
 %token <token> SUB
 %token <token> SET
@@ -146,8 +145,7 @@ instructionList:
 
 instruction:
 	CLOCK NAME integer COLON integer		{ $$ = ClockSemanticAction($2, $3, $5); }
-	| RENDER								{ $$ = RenderSemanticAction(); }
-	| ADD integer HOURS						{ $$ = AddSemanticAction($2, HOURS_UNIT); }
+| ADD integer HOURS						{ $$ = AddSemanticAction($2, HOURS_UNIT); }
 	| ADD integer MINUTES					{ $$ = AddSemanticAction($2, MINUTES_UNIT); }
 	| SUB integer HOURS						{ $$ = SubSemanticAction($2, HOURS_UNIT); }
 	| SUB integer MINUTES					{ $$ = SubSemanticAction($2, MINUTES_UNIT); }

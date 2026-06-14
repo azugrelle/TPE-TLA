@@ -21,7 +21,6 @@ InstructionList * EmptyInstructionListSemanticAction(void);
 
 /* Instructions */
 Instruction * ClockSemanticAction(char * name, int hour, int minute);
-Instruction * RenderSemanticAction(void);
 Instruction * AddSemanticAction(int value, TimeUnit unit);
 Instruction * SubSemanticAction(int value, TimeUnit unit);
 Instruction * SetHourSemanticAction(int value);

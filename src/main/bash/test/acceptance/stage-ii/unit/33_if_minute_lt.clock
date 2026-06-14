@@ -2,4 +2,3 @@ clock reloj 10:15
 if (minute < 30) {
   set minute 30
 }
-render

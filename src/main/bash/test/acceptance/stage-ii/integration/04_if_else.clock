@@ -4,4 +4,3 @@ if (minute >= 30) {
 } else {
   set hour 15
 }
-render

@@ -2,4 +2,3 @@ clock reloj 10:00
 repeat 3 {
   add 5 minutes
 }
-render

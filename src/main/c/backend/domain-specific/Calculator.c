@@ -68,7 +68,6 @@ static int _appendClock(ClockStateList * states, const char * name, int hour, in
 	clock->hour = hour;
 	clock->minute = minute;
 	clock->style = _defaultStyle();
-	clock->rendered = false;
 	return states->count++;
 }
 
@@ -188,12 +187,6 @@ static void _evaluateInstruction(Instruction * instruction, ClockStateList * sta
 				_evaluateInstructionList(instruction->ifInstr.thenBranch, states, activeIndex);
 			} else if (instruction->ifInstr.elseBranch != NULL) {
 				_evaluateInstructionList(instruction->ifInstr.elseBranch, states, activeIndex);
-			}
-			break;
-		}
-		case INSTR_RENDER: {
-			for (int i = 0; i < states->count; ++i) {
-				states->clocks[i].rendered = true;
 			}
 			break;
 		}

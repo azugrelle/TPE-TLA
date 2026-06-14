@@ -2,4 +2,3 @@ clock reloj 12:00
 if (hour >= 12) {
   sub 2 hours
 }
-render

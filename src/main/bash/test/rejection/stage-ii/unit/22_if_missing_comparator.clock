@@ -2,4 +2,3 @@ clock 10:00
 if (hour 10) {
   add 1 hours
 }
-render

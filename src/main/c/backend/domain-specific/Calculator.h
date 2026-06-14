@@ -29,7 +29,6 @@ typedef struct {
 	int hour;              // 0–23
 	int minute;            // 0–59
 	StyleState style;
-	bool rendered;         // true if a 'render' was reached after this clock was declared
 } ClockState;
 
 /**

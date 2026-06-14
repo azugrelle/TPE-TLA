@@ -56,7 +56,6 @@ whitespace			[[:space:]]+
 %}
 
 "clock"								{ return KeywordLexemeAction(CLOCK); }
-"render"							{ return KeywordLexemeAction(RENDER); }
 "add"								{ return KeywordLexemeAction(ADD); }
 "sub"								{ return KeywordLexemeAction(SUB); }
 "set"								{ return KeywordLexemeAction(SET); }

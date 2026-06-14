@@ -2,4 +2,3 @@ clock reloj 10:45
 if (minute >= 30 AND hour == 10) {
   next hour
 }
-render

@@ -60,13 +60,6 @@ Instruction * ClockSemanticAction(char * name, int hour, int minute) {
 	return instruction;
 }
 
-Instruction * RenderSemanticAction(void) {
-	_logSyntacticAnalyzerAction(__FUNCTION__);
-	Instruction * instruction = calloc(1, sizeof(Instruction));
-	instruction->type = INSTR_RENDER;
-	return instruction;
-}
-
 Instruction * AddSemanticAction(int value, TimeUnit unit) {
 	_logSyntacticAnalyzerAction(__FUNCTION__);
 	Instruction * instruction = calloc(1, sizeof(Instruction));

@@ -193,7 +193,6 @@ static void generateDocumentHead(ClockStateList * clocks, FILE * output) {
 
 	for (int i = 0; i < clocks->count; ++i) {
 		ClockState * state = &clocks->clocks[i];
-		if (!state->rendered) continue;
 		char id[128];
 		buildClockId(state, i, id, sizeof(id));
 		double ah = hourAngle(state);
@@ -240,9 +239,6 @@ void generateHTML(ClockStateList * clocks) {
 	int emitted = 0;
 	for (int i = 0; i < clocks->count; ++i) {
 		ClockState * state = &clocks->clocks[i];
-		if (!state->rendered) {
-			continue;
-		}
 		char clockId[128];
 		buildClockId(state, i, clockId, sizeof(clockId));
 		fprintf(output, "    <div class=\"clock-wrapper\">\n");
