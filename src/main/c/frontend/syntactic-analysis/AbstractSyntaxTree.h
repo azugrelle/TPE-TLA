@@ -10,7 +10,7 @@ ModuleDestructor initializeAbstractSyntaxTreeModule();
 
 typedef enum { HOURS_UNIT, MINUTES_UNIT } TimeUnit;
 typedef enum { COLOR_BLACK, COLOR_WHITE, COLOR_GREEN, COLOR_RED, COLOR_BLUE } Color;
-typedef enum { NUMBER_ARABIC, NUMBER_ROMAN } NumberType;
+typedef enum { NUMBER_WESTERN, NUMBER_ARABIC, NUMBER_ROMAN } NumberType;
 typedef enum { COMP_HOUR, COMP_MINUTE } Component;
 typedef enum { CMP_EQ, CMP_NEQ, CMP_LTE, CMP_GTE, CMP_LT, CMP_GT } Comparator;
 typedef enum { COND_SIMPLE, COND_AND, COND_OR, COND_NOT } ConditionType;

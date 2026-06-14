@@ -33,7 +33,7 @@ static StyleState _defaultStyle(void) {
 		.handColor = COLOR_BLACK,
 		.bgColor = COLOR_WHITE,
 		.borderColor = COLOR_BLACK,
-		.numbers = NUMBER_ARABIC
+		.numbers = NUMBER_WESTERN
 	};
 	return style;
 }

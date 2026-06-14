@@ -32,6 +32,13 @@ static const char * ROMAN_NUMERALS[HOUR_MARKS] = {
 	"VII", "VIII", "IX", "X", "XI", "XII"
 };
 
+/* Eastern Arabic-Indic digits U+0661..U+0669, U+0661U+0660, U+0661U+0661, U+0661U+0662 */
+static const char * ARABIC_NUMERALS[HOUR_MARKS] = {
+	"\xD9\xA1", "\xD9\xA2", "\xD9\xA3", "\xD9\xA4",
+	"\xD9\xA5", "\xD9\xA6", "\xD9\xA7", "\xD9\xA8",
+	"\xD9\xA9", "\xD9\xA1\xD9\xA0", "\xD9\xA1\xD9\xA1", "\xD9\xA1\xD9\xA2"
+};
+
 static double toRadians(double degrees) {
 	return degrees * M_PI / 180.0;
 }
@@ -93,6 +100,8 @@ static void generateNumbers(ClockState * state, FILE * output) {
 		char label[8];
 		if (state->style.numbers == NUMBER_ROMAN) {
 			snprintf(label, sizeof(label), "%s", ROMAN_NUMERALS[number - 1]);
+		} else if (state->style.numbers == NUMBER_ARABIC) {
+			snprintf(label, sizeof(label), "%s", ARABIC_NUMERALS[number - 1]);
 		} else {
 			snprintf(label, sizeof(label), "%d", number);
 		}

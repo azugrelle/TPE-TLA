@@ -17,7 +17,7 @@ typedef struct {
 	Color handColor;       // default: COLOR_BLACK
 	Color bgColor;         // default: COLOR_WHITE
 	Color borderColor;     // default: COLOR_BLACK
-	NumberType numbers;    // default: NUMBER_ARABIC
+	NumberType numbers;    // default: NUMBER_WESTERN
 } StyleState;
 
 /**
