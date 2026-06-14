@@ -1,0 +1,6 @@
+clock reloj 10:00
+if (hour == 10 AND minute == 99) {
+  add 30 minutes
+} else {
+  color red
+}

@@ -1,0 +1,4 @@
+clock reloj 10:00
+if (NOT (hour == 24)) {
+  color red
+}

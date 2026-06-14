@@ -1,0 +1,4 @@
+clock reloj 10:00
+if (minute == 60) {
+  color red
+}
