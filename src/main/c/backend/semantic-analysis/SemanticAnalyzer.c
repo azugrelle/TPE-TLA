@@ -21,6 +21,7 @@ ModuleDestructor initializeSemanticAnalyzerModule(void) {
 
 /* PRIVATE FUNCTIONS */
 #define MAX_TIME_AMOUNT 1000000
+#define MAX_REPEAT      1000000
 
 static bool _analyzeInstructionList(InstructionList * list, SymbolTable * table, ScopeStack * scopes, const char ** activeClock);
 
@@ -87,6 +88,10 @@ static bool _analyzeInstruction(Instruction * instruction, SymbolTable * table, 
 			}
 			if (instruction->repeat.times <= 0) {
 				logError(_logger, "Repeat count must be greater than 0, got %d.", instruction->repeat.times);
+				valid = false;
+			}
+			if (instruction->repeat.times > MAX_REPEAT) {
+				logError(_logger, "Repeat count out of range [1, %d]: %d.", MAX_REPEAT, instruction->repeat.times);
 				valid = false;
 			}
 			scopeStackPush(scopes, *activeClock);

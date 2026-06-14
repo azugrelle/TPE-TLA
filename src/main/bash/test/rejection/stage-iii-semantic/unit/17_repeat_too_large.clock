@@ -1,0 +1,4 @@
+clock reloj 10:00
+repeat 2000000000 {
+  add 1 hours
+}
