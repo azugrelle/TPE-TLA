@@ -1,4 +1,5 @@
 #include "Generator.h"
+#include <ctype.h>
 #include <math.h>
 
 #ifndef M_PI
@@ -33,6 +34,35 @@ static const char * ROMAN_NUMERALS[HOUR_MARKS] = {
 
 static double toRadians(double degrees) {
 	return degrees * M_PI / 180.0;
+}
+
+/** ANGLE_H = (hour % 12) * 30 + minute * 0.5. */
+static double hourAngle(const ClockState * state) {
+	return (state->hour % 12) * 30.0 + state->minute * 0.5;
+}
+
+/** ANGLE_M = minute * 6. */
+static double minuteAngle(const ClockState * state) {
+	return state->minute * 6.0;
+}
+
+/**
+ * Builds a CSS-identifier-safe, document-unique id for a clock, written into
+ * `buf`. The leading index guarantees uniqueness even if two clocks share a
+ * name (or sanitize to the same string); non-alphanumeric characters in the
+ * name become '_'.
+ */
+static void buildClockId(const ClockState * state, int index, char * buf, size_t size) {
+	int pos = snprintf(buf, size, "clk%d-", index);
+	if (pos < 0) {
+		buf[0] = '\0';
+		return;
+	}
+	for (const char * p = state->name; *p != '\0' && pos < (int) size - 1; ++p) {
+		unsigned char c = (unsigned char) *p;
+		buf[pos++] = isalnum(c) ? (char) c : '_';
+	}
+	buf[pos] = '\0';
 }
 
 /** Maps a Color enum to its CSS/SVG hexadecimal representation. */
@@ -73,7 +103,7 @@ static void generateNumbers(ClockState * state, FILE * output) {
 }
 
 /** Emits the inline SVG drawing for a single clock. */
-static void generateClockSVG(ClockState * state, FILE * output) {
+static void generateClockSVG(ClockState * state, const char * clockId, FILE * output) {
 	const char * bgColor = colorToHex(state->style.bgColor);
 	const char * borderColor = colorToHex(state->style.borderColor);
 	Color resolvedHand = (state->style.handColor == state->style.bgColor)
@@ -101,17 +131,35 @@ static void generateClockSVG(ClockState * state, FILE * output) {
 
 	int roman = (state->style.numbers == NUMBER_ROMAN);
 
-	// Hour hand: ANGLE_H = (hour % 12) * 30 + minute * 0.5.
-	double angleHour = (state->hour % 12) * 30.0 + state->minute * 0.5;
-	fprintf(output,
-		"        <line x1=\"0\" y1=\"12\" x2=\"0\" y2=\"%d\" stroke=\"%s\" stroke-width=\"6\" stroke-linecap=\"round\" transform=\"rotate(%.2f)\"/>\n",
-		roman ? -42 : -52, handColor, angleHour);
+	// Hands rotate via CSS animation (see the @keyframes in the document head).
+	// transform-box: view-box + transform-origin: center pins the rotation to
+	// (0,0) — the clock pivot — because the viewBox is symmetric. The inline
+	// transform is the static fallback before the animation kicks in.
+	const char * handStyleFmt =
+		"transform-box: view-box; transform-origin: center;"
+		" transform: rotate(%.2fdeg); animation: %s-%s %ss linear infinite;";
 
-	// Minute hand: ANGLE_M = minute * 6.
-	double angleMinute = state->minute * 6.0;
+	// Hour hand: ANGLE_H = (hour % 12) * 30 + minute * 0.5, one turn / 12h.
+	double angleHour = hourAngle(state);
 	fprintf(output,
-		"        <line x1=\"0\" y1=\"16\" x2=\"0\" y2=\"%d\" stroke=\"%s\" stroke-width=\"3\" stroke-linecap=\"round\" transform=\"rotate(%.2f)\"/>\n",
-		roman ? -54 : -64, handColor, angleMinute);
+		"        <line id=\"hour-hand-%s\" x1=\"0\" y1=\"12\" x2=\"0\" y2=\"%d\" stroke=\"%s\" stroke-width=\"6\" stroke-linecap=\"round\" style=\"",
+		clockId, roman ? -42 : -52, handColor);
+	fprintf(output, handStyleFmt, angleHour, "rotate-hour", clockId, "43200");
+	fprintf(output, "\"/>\n");
+
+	// Minute hand: ANGLE_M = minute * 6, one turn / hour.
+	double angleMinute = minuteAngle(state);
+	fprintf(output,
+		"        <line id=\"minute-hand-%s\" x1=\"0\" y1=\"16\" x2=\"0\" y2=\"%d\" stroke=\"%s\" stroke-width=\"3\" stroke-linecap=\"round\" style=\"",
+		clockId, roman ? -54 : -64, handColor);
+	fprintf(output, handStyleFmt, angleMinute, "rotate-minute", clockId, "3600");
+	fprintf(output, "\"/>\n");
+
+	// Second hand: the compiler has no sub-minute resolution, so it starts at
+	// 0deg. One turn / minute, fixed red for visibility.
+	fprintf(output,
+		"        <line id=\"second-hand-%s\" x1=\"0\" y1=\"20\" x2=\"0\" y2=\"-80\" stroke=\"#E74C3C\" stroke-width=\"1.5\" stroke-linecap=\"round\" style=\"transform-box: view-box; transform-origin: center; animation: rotate-second-%s 60s linear infinite;\"/>\n",
+		clockId, clockId);
 
 	// Central pivot.
 	fprintf(output, "        <circle r=\"5\" fill=\"%s\"/>\n", handColor);
@@ -119,8 +167,24 @@ static void generateClockSVG(ClockState * state, FILE * output) {
 	fprintf(output, "      </svg>\n");
 }
 
+/** Emits the per-clock @keyframes used to animate the hands. */
+static void generateClockKeyframes(const ClockState * state, const char * clockId, FILE * output) {
+	double angleHour = hourAngle(state);
+	double angleMinute = minuteAngle(state);
+	fprintf(output, "    /* %s */\n", state->name);
+	fprintf(output,
+		"    @keyframes rotate-hour-%s { from { transform: rotate(%.2fdeg); } to { transform: rotate(%.2fdeg); } }\n",
+		clockId, angleHour, angleHour + 360.0);
+	fprintf(output,
+		"    @keyframes rotate-minute-%s { from { transform: rotate(%.2fdeg); } to { transform: rotate(%.2fdeg); } }\n",
+		clockId, angleMinute, angleMinute + 360.0);
+	fprintf(output,
+		"    @keyframes rotate-second-%s { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }\n",
+		clockId);
+}
+
 /** Emits the document head, embedded stylesheet and the opening container. */
-static void generateDocumentHead(FILE * output) {
+static void generateDocumentHead(ClockStateList * clocks, FILE * output) {
 	fprintf(output,
 		"<!DOCTYPE html>\n"
 		"<html lang=\"es\">\n"
@@ -147,6 +211,21 @@ static void generateDocumentHead(FILE * output) {
 		"      font-family: sans-serif;\n"
 		"      font-size: 14px;\n"
 		"    }\n"
+	);
+
+	// Per-clock keyframes: one independent set per rendered clock so their
+	// animations never share state. The index mirrors the body loop's index.
+	for (int i = 0; i < clocks->count; ++i) {
+		ClockState * state = &clocks->clocks[i];
+		if (!state->rendered) {
+			continue;
+		}
+		char clockId[128];
+		buildClockId(state, i, clockId, sizeof(clockId));
+		generateClockKeyframes(state, clockId, output);
+	}
+
+	fprintf(output,
 		"  </style>\n"
 		"</head>\n"
 		"<body>\n"
@@ -168,16 +247,18 @@ static void generateDocumentTail(FILE * output) {
 void generateHTML(ClockStateList * clocks) {
 	logDebugging(_logger, "Generating HTML output...");
 	FILE * output = stdout;
-	generateDocumentHead(output);
+	generateDocumentHead(clocks, output);
 	int emitted = 0;
 	for (int i = 0; i < clocks->count; ++i) {
 		ClockState * state = &clocks->clocks[i];
 		if (!state->rendered) {
 			continue;
 		}
+		char clockId[128];
+		buildClockId(state, i, clockId, sizeof(clockId));
 		fprintf(output, "    <div class=\"clock-wrapper\">\n");
 		fprintf(output, "      <div class=\"clock-label\">%s</div>\n", state->name);
-		generateClockSVG(state, output);
+		generateClockSVG(state, clockId, output);
 		fprintf(output, "    </div>\n");
 		emitted++;
 	}
