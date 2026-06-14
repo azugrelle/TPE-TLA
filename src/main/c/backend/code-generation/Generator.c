@@ -47,9 +47,14 @@ static const char * colorToHex(Color color) {
 	return "#000000";
 }
 
+/** Returns a foreground color that is readable on top of `bg`. */
+static Color contrastColor(Color bg) {
+	return (bg == COLOR_WHITE) ? COLOR_BLACK : COLOR_WHITE;
+}
+
 /** Emits the 12 clock-face numbers, Arabic or Roman according to the style. */
 static void generateNumbers(ClockState * state, FILE * output) {
-	const char * fill = colorToHex(state->style.borderColor);
+	const char * fill = colorToHex(contrastColor(state->style.bgColor));
 	for (int i = 0; i < HOUR_MARKS; ++i) {
 		double angle = toRadians(i * 30.0);
 		double x = sin(angle) * 72.0;
@@ -71,7 +76,10 @@ static void generateNumbers(ClockState * state, FILE * output) {
 static void generateClockSVG(ClockState * state, FILE * output) {
 	const char * bgColor = colorToHex(state->style.bgColor);
 	const char * borderColor = colorToHex(state->style.borderColor);
-	const char * handColor = colorToHex(state->style.handColor);
+	Color resolvedHand = (state->style.handColor == state->style.bgColor)
+		? contrastColor(state->style.bgColor)
+		: state->style.handColor;
+	const char * handColor = colorToHex(resolvedHand);
 
 	fprintf(output, "      <svg viewBox=\"-105 -105 210 210\" width=\"200\" height=\"200\">\n");
 
@@ -91,17 +99,19 @@ static void generateClockSVG(ClockState * state, FILE * output) {
 	// Numbers.
 	generateNumbers(state, output);
 
+	int roman = (state->style.numbers == NUMBER_ROMAN);
+
 	// Hour hand: ANGLE_H = (hour % 12) * 30 + minute * 0.5.
 	double angleHour = (state->hour % 12) * 30.0 + state->minute * 0.5;
 	fprintf(output,
-		"        <line x1=\"0\" y1=\"12\" x2=\"0\" y2=\"-52\" stroke=\"%s\" stroke-width=\"6\" stroke-linecap=\"round\" transform=\"rotate(%.2f)\"/>\n",
-		handColor, angleHour);
+		"        <line x1=\"0\" y1=\"12\" x2=\"0\" y2=\"%d\" stroke=\"%s\" stroke-width=\"6\" stroke-linecap=\"round\" transform=\"rotate(%.2f)\"/>\n",
+		roman ? -42 : -52, handColor, angleHour);
 
 	// Minute hand: ANGLE_M = minute * 6.
 	double angleMinute = state->minute * 6.0;
 	fprintf(output,
-		"        <line x1=\"0\" y1=\"16\" x2=\"0\" y2=\"-72\" stroke=\"%s\" stroke-width=\"3\" stroke-linecap=\"round\" transform=\"rotate(%.2f)\"/>\n",
-		handColor, angleMinute);
+		"        <line x1=\"0\" y1=\"16\" x2=\"0\" y2=\"%d\" stroke=\"%s\" stroke-width=\"3\" stroke-linecap=\"round\" transform=\"rotate(%.2f)\"/>\n",
+		roman ? -54 : -64, handColor, angleMinute);
 
 	// Central pivot.
 	fprintf(output, "        <circle r=\"5\" fill=\"%s\"/>\n", handColor);
