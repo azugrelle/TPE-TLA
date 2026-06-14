@@ -114,8 +114,6 @@ static bool _analyzeInstruction(Instruction * instruction, SymbolTable * table, 
 			}
 			break;
 		}
-		case INSTR_RENDER:
-			break;
 	}
 	return valid;
 }
