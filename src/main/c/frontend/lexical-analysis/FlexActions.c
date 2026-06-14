@@ -1,4 +1,7 @@
 #include "FlexActions.h"
+#include <errno.h>
+#include <limits.h>
+#include <stdlib.h>
 
 /* MODULE INTERNAL STATE */
 
@@ -73,7 +76,12 @@ CompilationStatus SymbolLexemeAction(TokenLabel label) {
 
 CompilationStatus IntegerLexemeAction() {
 	Token * token = createToken(_lexicalAnalyzer, INTEGER);
-	token->semanticValue->integer = atoi(token->lexeme);
+	errno = 0;
+	long parsed = strtol(token->lexeme, NULL, 10);
+	if (errno == ERANGE || parsed > INT_MAX) {
+		parsed = INT_MAX;
+	}
+	token->semanticValue->integer = (int) parsed;
 	_logTokenAction(__FUNCTION__, token);
 	CompilationStatus status = pushToken(_lexicalAnalyzer, token);
 	destroyToken(token);

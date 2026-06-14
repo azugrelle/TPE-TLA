@@ -17,6 +17,7 @@
 .env*
 *.csproj.user
 *~
+*.html
 
 # Application specific.
 /program

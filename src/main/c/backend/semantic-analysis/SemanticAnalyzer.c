@@ -20,6 +20,7 @@ ModuleDestructor initializeSemanticAnalyzerModule(void) {
 }
 
 /* PRIVATE FUNCTIONS */
+#define MAX_TIME_AMOUNT 1000000
 
 static bool _analyzeInstructionList(InstructionList * list, SymbolTable * table, ScopeStack * scopes, const char ** activeClock);
 
@@ -29,6 +30,14 @@ static bool _analyzeInstruction(Instruction * instruction, SymbolTable * table, 
 		case INSTR_CLOCK: {
 			if (!symbolTableInsert(table, instruction->clock.name)) {
 				logError(_logger, "Clock '%s' was already declared.", instruction->clock.name);
+				valid = false;
+			}
+			if (instruction->clock.hour < 0 || instruction->clock.hour > 23) {
+				logError(_logger, "Clock '%s' initial hour out of range [0, 23]: %d.", instruction->clock.name, instruction->clock.hour);
+				valid = false;
+			}
+			if (instruction->clock.minute < 0 || instruction->clock.minute > 59) {
+				logError(_logger, "Clock '%s' initial minute out of range [0, 59]: %d.", instruction->clock.name, instruction->clock.minute);
 				valid = false;
 			}
 			*activeClock = instruction->clock.name;
@@ -101,7 +110,19 @@ static bool _analyzeInstruction(Instruction * instruction, SymbolTable * table, 
 			break;
 		}
 		case INSTR_ADD:
-		case INSTR_SUB:
+		case INSTR_SUB: {
+			if (*activeClock == NULL) {
+				logError(_logger, "Operation used before declaring a clock.");
+				valid = false;
+			}
+			// Bound the amount well below INT_MAX / MINUTES_PER_HOUR so that the
+			// "value * 60" conversion in the Calculator can never overflow.
+			if (instruction->arithmetic.value < 0 || instruction->arithmetic.value > MAX_TIME_AMOUNT) {
+				logError(_logger, "Time amount out of range [0, %d]: %d.", MAX_TIME_AMOUNT, instruction->arithmetic.value);
+				valid = false;
+			}
+			break;
+		}
 		case INSTR_ROUND:
 		case INSTR_NEXT_HOUR:
 		case INSTR_COLOR:
