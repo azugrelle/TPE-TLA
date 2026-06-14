@@ -1,0 +1,10 @@
+clock buenos_aires 10:30
+UTC-3 -> UTC+0
+color blue
+background black
+numbers roman
+clock nueva_york 10:30
+UTC-5 -> UTC+0
+color red
+background white
+numbers arabic

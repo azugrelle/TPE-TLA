@@ -25,6 +25,34 @@ ModuleDestructor initializeSemanticAnalyzerModule(void) {
 
 static bool _analyzeInstructionList(InstructionList * list, SymbolTable * table, ScopeStack * scopes, const char ** activeClock);
 
+static bool _analyzeCondition(Condition * condition) {
+	bool valid = true;
+	switch (condition->type) {
+		case COND_SIMPLE:
+			if (condition->simple.component == COMP_HOUR) {
+				if (condition->simple.value < 0 || condition->simple.value > 23) {
+					logError(_logger, "Hour value in condition out of range [0, 23]: %d.", condition->simple.value);
+					valid = false;
+				}
+			} else {
+				if (condition->simple.value < 0 || condition->simple.value > 59) {
+					logError(_logger, "Minute value in condition out of range [0, 59]: %d.", condition->simple.value);
+					valid = false;
+				}
+			}
+			break;
+		case COND_AND:
+		case COND_OR:
+			if (!_analyzeCondition(condition->binary.left)) valid = false;
+			if (!_analyzeCondition(condition->binary.right)) valid = false;
+			break;
+		case COND_NOT:
+			if (!_analyzeCondition(condition->unary.operand)) valid = false;
+			break;
+	}
+	return valid;
+}
+
 static bool _analyzeInstruction(Instruction * instruction, SymbolTable * table, ScopeStack * scopes, const char ** activeClock) {
 	bool valid = true;
 	switch (instruction->type) {
@@ -104,6 +132,7 @@ static bool _analyzeInstruction(Instruction * instruction, SymbolTable * table, 
 				logError(_logger, "Operation 'if' used before declaring a clock.");
 				valid = false;
 			}
+			if (!_analyzeCondition(instruction->ifInstr.condition)) valid = false;
 			scopeStackPush(scopes, *activeClock);
 			if (!_analyzeInstructionList(instruction->ifInstr.thenBranch, table, scopes, activeClock)) valid = false;
 			scopeStackPop(scopes);
