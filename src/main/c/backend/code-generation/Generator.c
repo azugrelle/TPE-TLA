@@ -126,61 +126,30 @@ static void generateClockSVG(ClockState * state, const char * clockId, FILE * ou
 			s * 85.0, -c * 85.0, s * 95.0, -c * 95.0, borderColor);
 	}
 
-	// Numbers.
-	generateNumbers(state, output);
-
 	int roman = (state->style.numbers == NUMBER_ROMAN);
 
-	// Hands rotate via CSS animation (see the @keyframes in the document head).
-	// transform-box: view-box + transform-origin: center pins the rotation to
-	// (0,0) — the clock pivot — because the viewBox is symmetric. The inline
-	// transform is the static fallback before the animation kicks in.
-	const char * handStyleFmt =
-		"transform-box: view-box; transform-origin: center;"
-		" transform: rotate(%.2fdeg); animation: %s-%s %ss linear infinite;";
-
 	// Hour hand: ANGLE_H = (hour % 12) * 30 + minute * 0.5, one turn / 12h.
-	double angleHour = hourAngle(state);
 	fprintf(output,
-		"        <line id=\"hour-hand-%s\" x1=\"0\" y1=\"12\" x2=\"0\" y2=\"%d\" stroke=\"%s\" stroke-width=\"6\" stroke-linecap=\"round\" style=\"",
-		clockId, roman ? -42 : -52, handColor);
-	fprintf(output, handStyleFmt, angleHour, "rotate-hour", clockId, "43200");
-	fprintf(output, "\"/>\n");
+		"        <line x1=\"0\" y1=\"12\" x2=\"0\" y2=\"%d\" stroke=\"%s\" stroke-width=\"6\" stroke-linecap=\"round\" class=\"hand-%s-hour\"/>\n",
+		roman ? -42 : -52, handColor, clockId);
 
 	// Minute hand: ANGLE_M = minute * 6, one turn / hour.
-	double angleMinute = minuteAngle(state);
 	fprintf(output,
-		"        <line id=\"minute-hand-%s\" x1=\"0\" y1=\"16\" x2=\"0\" y2=\"%d\" stroke=\"%s\" stroke-width=\"3\" stroke-linecap=\"round\" style=\"",
-		clockId, roman ? -54 : -64, handColor);
-	fprintf(output, handStyleFmt, angleMinute, "rotate-minute", clockId, "3600");
-	fprintf(output, "\"/>\n");
+		"        <line x1=\"0\" y1=\"16\" x2=\"0\" y2=\"%d\" stroke=\"%s\" stroke-width=\"3\" stroke-linecap=\"round\" class=\"hand-%s-minute\"/>\n",
+		roman ? -54 : -64, handColor, clockId);
 
-	// Second hand: the compiler has no sub-minute resolution, so it starts at
-	// 0deg. One turn / minute, fixed red for visibility.
+	// Second hand starts at 0. One turn / minute, fixed red for visibility.
 	fprintf(output,
-		"        <line id=\"second-hand-%s\" x1=\"0\" y1=\"20\" x2=\"0\" y2=\"-80\" stroke=\"#E74C3C\" stroke-width=\"1.5\" stroke-linecap=\"round\" style=\"transform-box: view-box; transform-origin: center; animation: rotate-second-%s 60s linear infinite;\"/>\n",
-		clockId, clockId);
+		"        <line x1=\"0\" y1=\"20\" x2=\"0\" y2=\"-80\" stroke=\"#E74C3C\" stroke-width=\"1.5\" stroke-linecap=\"round\" class=\"hand-%s-second\"/>\n",
+		clockId);
+
+	// Numbers drawn after hands so they always render on top.
+	generateNumbers(state, output);
 
 	// Central pivot.
 	fprintf(output, "        <circle r=\"5\" fill=\"%s\"/>\n", handColor);
 
 	fprintf(output, "      </svg>\n");
-}
-
-/** Emits the per-clock @keyframes used to animate the hands. */
-static void generateClockKeyframes(const ClockState * state, const char * clockId, FILE * output) {
-	double angleHour = hourAngle(state);
-	double angleMinute = minuteAngle(state);
-	fprintf(output, "    /* %s */\n", state->name);
-	fprintf(output,
-		"    @keyframes rotate-hour-%s { from { transform: rotate(%.2fdeg); } to { transform: rotate(%.2fdeg); } }\n",
-		clockId, angleHour, angleHour + 360.0);
-	fprintf(output,
-		"    @keyframes rotate-minute-%s { from { transform: rotate(%.2fdeg); } to { transform: rotate(%.2fdeg); } }\n",
-		clockId, angleMinute, angleMinute + 360.0);
-	fprintf(output,
-		"    @keyframes rotate-second-%s { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }\n",
-		clockId);
 }
 
 /** Emits the document head, embedded stylesheet and the opening container. */
@@ -213,16 +182,27 @@ static void generateDocumentHead(ClockStateList * clocks, FILE * output) {
 		"    }\n"
 	);
 
-	// Per-clock keyframes: one independent set per rendered clock so their
-	// animations never share state. The index mirrors the body loop's index.
 	for (int i = 0; i < clocks->count; ++i) {
 		ClockState * state = &clocks->clocks[i];
-		if (!state->rendered) {
-			continue;
-		}
-		char clockId[128];
-		buildClockId(state, i, clockId, sizeof(clockId));
-		generateClockKeyframes(state, clockId, output);
+		if (!state->rendered) continue;
+		char id[128];
+		buildClockId(state, i, id, sizeof(id));
+		double ah = hourAngle(state);
+		double am = minuteAngle(state);
+		fprintf(output,
+			"    @keyframes rotate-%s-hour   { from { transform: rotate(%.2fdeg); } to { transform: rotate(%.2fdeg); } }\n"
+			"    @keyframes rotate-%s-minute { from { transform: rotate(%.2fdeg); } to { transform: rotate(%.2fdeg); } }\n"
+			"    @keyframes rotate-%s-second { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }\n"
+			"    .hand-%s-hour   { transform-origin: 0 0; animation: rotate-%s-hour   43200s linear infinite; }\n"
+			"    .hand-%s-minute { transform-origin: 0 0; animation: rotate-%s-minute  3600s linear infinite; }\n"
+			"    .hand-%s-second { transform-origin: 0 0; animation: rotate-%s-second    60s linear infinite; }\n",
+			id, ah, ah + 360.0,
+			id, am, am + 360.0,
+			id,
+			id, id,
+			id, id,
+			id, id
+		);
 	}
 
 	fprintf(output,
